@@ -20,7 +20,7 @@ main{max-width:1200px;margin:0 auto;padding:22px;display:grid;grid-template-colu
 .sidebar{display:flex;flex-direction:column;gap:14px}.side-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.side-head h2,.section-title{font-size:16px;margin:0;font-weight:750}.big-stat{font-size:27px;font-weight:750;margin-top:12px;font-variant-numeric:tabular-nums}.substat{font-size:12px;color:var(--muted);margin-top:3px}
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}.stat-tile{padding:12px;background:var(--panel2);border-radius:10px}.stat-tile .value{font-weight:750;font-size:19px;margin-top:4px;font-variant-numeric:tabular-nums}
 .session-select{max-width:145px;padding:6px 8px;font-size:13px}.session-row{display:flex;gap:7px;margin-top:12px}.session-row input{min-width:0;flex:1;width:80px}
-.table-wrap{overflow:auto;margin-top:12px}table{width:100%;border-collapse:collapse;white-space:nowrap}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--border);font-size:13px}th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}td:first-child{color:var(--muted);width:42px}td.time-cell{font-weight:700;font-variant-numeric:tabular-nums}tr.selected{background:#252b36}tr{cursor:pointer}tr:hover{background:#242833}.row-actions{display:flex;gap:6px}.small{padding:5px 8px;font-size:12px}
+.table-wrap{overflow:auto;margin-top:12px}table{width:100%;border-collapse:collapse;white-space:nowrap}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--border);font-size:13px}th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}td:first-child{color:var(--muted);width:42px}td.time-cell{font-weight:700;font-variant-numeric:tabular-nums}tr.selected{background:#252b36}tr{cursor:pointer}tr:hover{background:#242833}.row-actions{display:flex;gap:6px}.small{padding:5px 8px;font-size:12px}.delete-solve{color:var(--red);padding:4px 7px;font-size:12px}.room-code{width:100%;margin-top:8px}.room-board{display:flex;flex-direction:column;gap:7px;margin-top:10px}.room-entry{display:flex;justify-content:space-between;gap:8px;background:var(--panel2);border-radius:8px;padding:8px 10px;font-size:13px}.room-entry strong{font-variant-numeric:tabular-nums}
 footer{max-width:1200px;margin:0 auto;padding:0 22px 24px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:14px;width:min(520px,calc(100% - 28px));padding:22px}dialog::backdrop{background:#0009}.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}.settings-grid label{display:flex;flex-direction:column;gap:7px;font-size:13px;color:var(--muted)}.settings-grid select,.settings-grid input{width:100%}.dialog-actions{display:flex;justify-content:flex-end;gap:8px}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#2c3340;padding:10px 15px;border:1px solid var(--border);border-radius:10px;display:none;z-index:5}
@@ -91,13 +91,24 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
       <div id="toolOutput" style="margin-top:10px;display:none"></div>
       <input id="importFile" type="file" accept="application/json,.json" hidden>
     </section>
+    <section class="card" id="multiplayerCard">
+      <div class="side-head"><h2>Multiplayer room</h2><span class="substat">Invite-only link</span></div>
+      <p class="substat" style="margin-top:8px">Create a private room and share its invite link with one person. The first invited guest to connect can join.</p>
+      <input id="roomName" class="room-code" maxlength="32" placeholder="Room name (e.g. Cube Duel)" aria-label="Room name">
+      <input id="playerName" class="room-code" maxlength="20" placeholder="Your display name" aria-label="Your display name">
+      <div class="controls" style="justify-content:flex-start;margin-top:8px"><button class="primary" id="createRoomBtn">＋ Create room</button><button id="leaveRoomBtn" disabled>Leave room</button></div>
+      <div class="substat" id="roomStatus" style="margin-top:10px" aria-live="polite">Not connected to a room.</div>
+      <div id="inviteWrap" style="display:none;margin-top:8px"><label class="substat" for="inviteLink">Private invite link</label><input id="inviteLink" class="room-code" readonly><button id="copyInviteBtn" class="small" style="margin-top:7px">Copy invite link</button></div>
+      <div id="joinWrap" style="margin-top:10px"><label class="substat" for="joinCode">Have an invite code?</label><input id="joinCode" class="room-code" placeholder="Paste invite link or code" aria-label="Invite link or code"><button id="joinRoomBtn" style="margin-top:7px">Join room</button></div>
+      <div id="roomBoard" class="room-board"><div class="substat">Room results will appear here.</div></div>
+    </section>
     <section class="card">
       <div class="side-head"><h2>Recent solves</h2><button class="small" id="export">Export CSV</button></div>
       <div class="table-wrap">
-        <table><thead><tr><th>#</th><th>Time</th><th>Penalty</th><th>Label</th><th>Pts</th></tr></thead><tbody id="solveRows"><tr><td colspan="3" style="color:var(--muted);text-align:center">Your solves will appear here.</td></tr></tbody></table>
+        <table><thead><tr><th>#</th><th>Time</th><th>Penalty</th><th>Label</th><th>Pts</th><th>Delete</th></tr></thead><tbody id="solveRows"><tr><td colspan="3" style="color:var(--muted);text-align:center">Your solves will appear here.</td></tr></tbody></table>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:8px">
-        <span class="substat">Select a solve to inspect it.</span><button class="small danger" id="clearSession">Clear session</button>
+        <span class="substat">Select a solve to inspect it.</span><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="small" id="undoDeleteBtn" disabled>↶ Undo delete</button><button class="small danger" id="clearSession">Clear session</button></div>
       </div>
     </section>
   </aside>
@@ -115,6 +126,7 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
   <div class="dialog-actions"><button id="closeSettings">Cancel</button><button class="primary" id="saveSettings">Save settings</button></div>
 </dialog>
 <div class="toast" id="toast" role="status"></div>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -125,7 +137,7 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
     labels: [{id:1,name:"Legendary",mode:"below",min:0,max:5,points:10},{id:2,name:"Epic",mode:"between",min:5,max:10,points:5},{id:3,name:"Bad",mode:"above",min:10,max:0,points:0}], nextLabelId: 4,
     running: false, ready: false, holdTimer: null, startAt: 0, elapsed: 0,
     raf: null, precision: 2, holdDelay: 500, cube: "3", inspection: "off",
-    currentScramble: "", selected: null, lastStop: 0, pointer: null, inspectionEnd: 0, inspectionInterval: null, metronome: false, metronomeInterval: null
+    currentScramble: "", selected: null, lastStop: 0, pointer: null, inspectionEnd: 0, inspectionInterval: null, metronome: false, metronomeInterval: null, deletedSolve: null, roomPeer: null, roomConn: null, roomRole: null, roomToken: null, roomInvite: "", roomGuestAccepted: false, roomResults: [], roomId: null
   };
   const storeKey = "cubetime-state-v1";
   function load() {
@@ -196,7 +208,7 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
     const solve = { ms: Math.round(state.elapsed), penalty: "", scramble: state.currentScramble, date: new Date().toISOString() };
     applyLabel(solve);
     currentSolves().unshift(solve); state.selected = 0;
-    save(); render(); makeScramble();
+    save(); render(); broadcastSolve(solve); makeScramble();
     $("hint").textContent = "Hold SPACE to ready, release to start · Press SPACE to stop";
   }
   function startHold() {
@@ -267,8 +279,9 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
     const a12 = average(solves,12); $("ao12").textContent = a12 === null ? "—" : typeof a12 === "string" ? a12 : format(a12);
     let bestA5=null; for(let i=0;i<=solves.length-5;i++){const av=average(solves.slice(i,i+5),5);if(typeof av === "number" && (bestA5===null||av<bestA5))bestA5=av;} $("bestAo5").textContent=bestA5===null?"—":format(bestA5);
     $("solveRows").innerHTML = solves.length ? solves.slice(0,100).map((s,i) =>
-      `<tr data-index="${i}" class="${state.selected===i?"selected":""}"><td>${solves.length-i}</td><td class="time-cell">${format(s.ms,s.penalty)}</td><td>${s.penalty || "—"}</td><td>${escapeHtml(labelFor(s))}</td><td>${s.penalty === "DNF" ? 0 : Number(s.points||0)}</td></tr>`
-    ).join("") : `<tr><td colspan="5" style="color:var(--muted);text-align:center">Your solves will appear here.</td></tr>`;
+      `<tr data-index="${i}" class="${state.selected===i?"selected":""}"><td>${solves.length-i}</td><td class="time-cell">${format(s.ms,s.penalty)}</td><td>${s.penalty || "—"}</td><td>${escapeHtml(labelFor(s))}</td><td>${s.penalty === "DNF" ? 0 : Number(s.points||0)}</td><td><button class="delete-solve" data-delete-solve="${i}" aria-label="Delete solve ${solves.length-i}" title="Delete this solve">🗑</button></td></tr>`
+    ).join("") : `<tr><td colspan="6" style="color:var(--muted);text-align:center">Your solves will appear here.</td></tr>`;
+    $("undoDeleteBtn").disabled = !state.deletedSolve;
     renderLabels();
     $("cubeType").value = state.cube; $("precision").value = String(state.precision); $("holdDelay").value = String(state.holdDelay); $("inspection").value = state.inspection;
   }
@@ -354,10 +367,20 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
     state.sessions[name]=[];state.currentSession=name;$("sessionName").value="";save();render();toast("Session created.");
   });
   $("clearSession").addEventListener("click", () => {
-    if(!currentSolves().length)return;
-    if(confirm(`Delete all solves in "${state.currentSession}"?`)){state.sessions[state.currentSession]=[];state.selected=null;save();render();}
+    if(!currentSolves().length)return toast("This session is already empty.");
+    if(confirm(`Delete all solves in "${state.currentSession}"? This cannot be undone as a group.`)){state.sessions[state.currentSession]=[];state.selected=null;state.deletedSolve=null;save();render();toast("Session cleared.");}
+  });
+  $("undoDeleteBtn").addEventListener("click", () => {
+    if(!state.deletedSolve)return;
+    const d=state.deletedSolve;
+    if(!state.sessions[d.session])state.sessions[d.session]=[];
+    state.sessions[d.session].splice(Math.min(d.index,state.sessions[d.session].length),0,d.solve);
+    state.currentSession=d.session;state.selected=d.index;state.deletedSolve=null;save();render();toast("Solve restored.");
   });
   $("solveRows").addEventListener("click", e => {
+    const del=e.target.closest("[data-delete-solve]");
+    if(del){e.stopPropagation();const index=Number(del.dataset.deleteSolve),solves=currentSolves();if(!solves[index])return;
+      state.deletedSolve={session:state.currentSession,index,solve:solves[index]};solves.splice(index,1);state.selected=null;save();render();toast("Solve deleted. You can undo this.");return;}
     const tr=e.target.closest("tr[data-index]");if(!tr)return;
     state.selected=Number(tr.dataset.index);const s=currentSolves()[state.selected];
     $("scramble").textContent=s.scramble || "No scramble saved";$("scrambleLabel").textContent=`Solve ${currentSolves().length-state.selected}`;
@@ -372,7 +395,7 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
   function addManualSolve(){
     const raw=prompt("Enter solve time in seconds (example: 12.34):"); if(raw===null)return;
     const ms=Number(raw)*1000; if(!Number.isFinite(ms)||ms<=0)return toast("Enter a valid time in seconds.");
-    const solve={ms:Math.round(ms),penalty:"",scramble:state.currentScramble,date:new Date().toISOString(),comment:"Manual entry"};applyLabel(solve);currentSolves().unshift(solve);state.selected=0;save();render();makeScramble();toast("Solve added.");
+    const solve={ms:Math.round(ms),penalty:"",scramble:state.currentScramble,date:new Date().toISOString(),comment:"Manual entry"};applyLabel(solve);currentSolves().unshift(solve);state.selected=0;save();render();broadcastSolve(solve);makeScramble();toast("Solve added.");
   }
   $("manualEntryBtn").addEventListener("click",addManualSolve);
   $("inspectionBtn").addEventListener("click",()=>{
@@ -418,6 +441,68 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
       state.metronomeInterval=setInterval(()=>{try{const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();osc.frequency.value=880;gain.gain.value=.035;osc.connect(gain);gain.connect(audioCtx.destination);osc.start();osc.stop(audioCtx.currentTime+.045);}catch(e){}},1000);toast("Metronome on · 60 BPM");
     }else toast("Metronome off.");
   });
+  // Peer-to-peer multiplayer: room host gives a private, token-protected invite link to one guest.
+  function roomStatus(message){ $("roomStatus").textContent=message; }
+  function renderRoomBoard(){
+    const board=$("roomBoard");
+    board.innerHTML=state.roomResults.length?state.roomResults.slice(-30).reverse().map(r=>`<div class="room-entry"><span>${escapeHtml(r.name)} · ${escapeHtml(r.time)}</span><span class="substat">${escapeHtml(r.at||"")}</span></div>`).join(""):'<div class="substat">Room results will appear here.</div>';
+  }
+  function sendRoom(message){try{if(state.roomConn&&state.roomConn.open)state.roomConn.send(message);}catch(e){}}
+  function broadcastSolve(solve){
+    if(!state.roomRole)return;
+    const entry={type:"solve",name:($("playerName").value.trim()||"Player"),time:format(solve.ms,solve.penalty),at:new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"}),ms:solve.ms,penalty:solve.penalty||""};
+    state.roomResults.push(entry);renderRoomBoard();
+    if(state.roomRole==="host")sendRoom(entry);else sendRoom(entry);
+  }
+  function roomPayload(){return {peerId:state.roomId,token:state.roomToken,name:$ ("roomName").value.trim()||"CubeTime Room"};}
+  function setRoomConnected(role){state.roomRole=role;$("leaveRoomBtn").disabled=false;$("createRoomBtn").disabled=true;$("joinRoomBtn").disabled=true;$("roomName").disabled=true;$("joinWrap").style.display=role==="host"?"none":"block";}
+  function resetRoom(message){try{if(state.roomConn)state.roomConn.close();if(state.roomPeer)state.roomPeer.destroy();}catch(e){}state.roomPeer=null;state.roomConn=null;state.roomRole=null;state.roomToken=null;state.roomInvite="";state.roomGuestAccepted=false;state.roomId=null;state.roomResults=[];$("inviteWrap").style.display="none";$("leaveRoomBtn").disabled=true;$("createRoomBtn").disabled=false;$("joinRoomBtn").disabled=false;$("roomName").disabled=false;$("joinWrap").style.display="block";roomStatus(message||"Not connected to a room.");renderRoomBoard();}
+  function randomToken(){const bytes=new Uint8Array(18);crypto.getRandomValues(bytes);return Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("");}
+  function makeInvite(payload){const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"");return `${location.origin}${location.pathname}?room=${encoded}`;}
+  function parseInvite(value){let raw=value.trim();if(!raw)return null;try{if(raw.includes("?room="))raw=new URL(raw,location.href).searchParams.get("room")||"";raw=raw.replace(/-/g,"+").replace(/_/g,"/");raw+="=".repeat((4-raw.length%4)%4);const data=JSON.parse(decodeURIComponent(escape(atob(raw))));if(data.peerId&&data.token)return data;}catch(e){}return null;}
+  $("createRoomBtn").addEventListener("click",()=>{
+    if(!window.Peer)return toast("Multiplayer library did not load. Check your connection and reload.");
+    const name=$("roomName").value.trim();if(!name)return toast("Enter a room name first.");
+    if(state.roomPeer)return toast("Leave the current room first.");
+    state.roomToken=randomToken();state.roomResults=[];state.roomRole="host";roomStatus("Creating private room…");
+    const peer=new Peer();state.roomPeer=peer;
+    peer.on("open",id=>{state.roomId=id;const invite=makeInvite(roomPayload());state.roomInvite=invite;$("inviteLink").value=invite;$("inviteWrap").style.display="block";setRoomConnected("host");roomStatus(`Room “${name}” is open. Waiting for one invited guest.`);});
+    peer.on("connection",conn=>{
+      if(state.roomGuestAccepted){conn.on("open",()=>conn.send({type:"reject",message:"This room already has its one guest."}));setTimeout(()=>conn.close(),1200);return;}
+      state.roomConn=conn;
+      conn.on("data",data=>{
+        if(data?.type==="auth"){
+          if(data.token!==state.roomToken||state.roomGuestAccepted){conn.send({type:"reject",message:"Invite is invalid or this room is already full."});conn.close();return;}
+          state.roomGuestAccepted=true;setRoomConnected("host");conn.send({type:"welcome",roomName:$ ("roomName").value.trim(),hostName:$ ("playerName").value.trim()||"Host",results:state.roomResults});roomStatus(`Connected to “${$("roomName").value.trim()}” · 1 guest joined.`);return;
+        }
+        if(data?.type==="solve"&&state.roomGuestAccepted){state.roomResults.push(data);renderRoomBoard();}
+      });
+      conn.on("close",()=>{if(state.roomConn===conn){state.roomConn=null;state.roomGuestAccepted=false;roomStatus("Guest disconnected. Waiting for an invited guest.");}});
+    });
+    peer.on("error",err=>{roomStatus(`Room error: ${err.type||"connection failed"}. Try again.`);});
+  });
+  $("joinRoomBtn").addEventListener("click",()=>{
+    if(!window.Peer)return toast("Multiplayer library did not load. Check your connection and reload.");
+    if(state.roomPeer)return toast("Leave the current room first.");
+    const invite=parseInvite($("joinCode").value);if(!invite)return toast("Paste a valid private invite link.");
+    state.roomToken=invite.token;state.roomId=invite.peerId;roomStatus("Connecting to room…");
+    const peer=new Peer();state.roomPeer=peer;
+    peer.on("open",()=>{const conn=peer.connect(invite.peerId,{reliable:true});state.roomConn=conn;
+      conn.on("open",()=>conn.send({type:"auth",token:invite.token,name:$ ("playerName").value.trim()||"Guest"}));
+      conn.on("data",data=>{
+        if(data?.type==="reject"){roomStatus(data.message||"Could not join room.");resetRoom(data.message||"Could not join room.");return;}
+        if(data?.type==="welcome"){state.roomRole="guest";setRoomConnected("guest");$("roomName").value=data.roomName||"CubeTime Room";$("roomName").disabled=true;state.roomResults=Array.isArray(data.results)?data.results:[];renderRoomBoard();roomStatus(`Joined “${data.roomName}” with ${data.hostName}.`);$("inviteWrap").style.display="none";}
+        else if(data?.type==="solve"){state.roomResults.push(data);renderRoomBoard();}
+      });
+      conn.on("error",()=>roomStatus("Could not connect. Ask the host to create a fresh invite link."));
+      conn.on("close",()=>{if(state.roomRole){resetRoom("Host disconnected from the room.");}});
+    });
+    peer.on("error",err=>{roomStatus(`Connection error: ${err.type||"could not connect"}.`);});
+  });
+  $("copyInviteBtn").addEventListener("click",async()=>{try{await navigator.clipboard.writeText($("inviteLink").value);toast("Invite link copied. Send it only to your invited person.");}catch(e){$("inviteLink").select();toast("Select and copy the invite link.");}});
+  $("leaveRoomBtn").addEventListener("click",()=>resetRoom("You left the room."));
+  const inviteFromUrl=new URLSearchParams(location.search).get("room");if(inviteFromUrl){$("joinCode").value=location.href;roomStatus("Private invite detected. Tap Join room to connect.");}
+
   $("settingsBtn").addEventListener("click", () => $("settingsDialog").showModal());
   $("closeSettings").addEventListener("click", () => $("settingsDialog").close());
   $("saveSettings").addEventListener("click", () => {
