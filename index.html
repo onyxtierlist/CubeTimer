@@ -92,14 +92,13 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
       <input id="importFile" type="file" accept="application/json,.json" hidden>
     </section>
     <section class="card" id="multiplayerCard">
-      <div class="side-head"><h2>Multiplayer room</h2><span class="substat">Invite-only link</span></div>
-      <p class="substat" style="margin-top:8px">Create a private room and share the same invite link with multiple friends. Everyone in the room appears in the participant list.</p>
+      <div class="side-head"><h2>Multiplayer room</h2><span class="substat">Room name = invite</span></div>
+      <p class="substat" style="margin-top:8px">Create a room, then share its exact name. Friends type the same name to join. Room names are case-sensitive (az and AZ are different).</p>
       <input id="roomName" class="room-code" maxlength="32" placeholder="Room name (e.g. Cube Duel)" aria-label="Room name">
       <input id="playerName" class="room-code" maxlength="20" placeholder="Your display name" aria-label="Your display name">
       <div class="controls" style="justify-content:flex-start;margin-top:8px"><button class="primary" id="createRoomBtn">＋ Create room</button><button id="leaveRoomBtn" disabled>Leave room</button></div>
       <div class="substat" id="roomStatus" style="margin-top:10px" aria-live="polite">Not connected to a room.</div>
-      <div id="inviteWrap" style="display:none;margin-top:8px"><label class="substat" for="inviteLink">Private invite link</label><input id="inviteLink" class="room-code" readonly><button id="copyInviteBtn" class="small" style="margin-top:7px">Copy invite link</button></div>
-      <div id="joinWrap" style="margin-top:10px"><label class="substat" for="joinCode">Have an invite code?</label><input id="joinCode" class="room-code" placeholder="Paste invite link or code" aria-label="Invite link or code"><button id="joinRoomBtn" style="margin-top:7px">Join room</button></div>
+      <div id="joinWrap" style="margin-top:10px"><button id="joinRoomBtn">Join room by name</button></div>
       <div class="room-section-title">People in room <span id="roomParticipantCount">(0)</span></div><div id="roomParticipants" class="room-board"><div class="substat">Create or join a room to see participants.</div></div><div class="room-section-title">Shared solve results</div><div id="roomBoard" class="room-board"><div class="substat">Room results will appear here.</div></div>
     </section>
     <section class="card">
@@ -441,9 +440,22 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
       state.metronomeInterval=setInterval(()=>{try{const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();osc.frequency.value=880;gain.gain.value=.035;osc.connect(gain);gain.connect(audioCtx.destination);osc.start();osc.stop(audioCtx.currentTime+.045);}catch(e){}},1000);toast("Metronome on · 60 BPM");
     }else toast("Metronome off.");
   });
-  // Peer-to-peer multiplayer: one host accepts multiple invite-link holders.
+  // Static-site multiplayer: the exact room name maps to a deterministic PeerJS ID.
+  // This uses PeerJS's public signaling broker; no CubeTime backend is required.
   function roomStatus(message){ $("roomStatus").textContent=message; }
   function roomDisplayName(){return ($("playerName").value.trim()|| (state.roomRole==="host"?"Host":"Guest")).slice(0,20);}
+  function roomNameValue(){return $("roomName").value.trim();}
+  function roomPeerIdForName(name){
+    // Two independent 32-bit hashes keep IDs short and preserve case sensitivity.
+    let a=2166136261,b=0x9e3779b9;
+    for(let i=0;i<name.length;i++){
+      const c=name.charCodeAt(i);
+      a=Math.imul(a^c,16777619)>>>0;
+      b=Math.imul(b^(c+i),2246822519)>>>0;
+      b=(b^(b>>>13))>>>0;
+    }
+    return `cubetime-${a.toString(36)}-${b.toString(36)}`;
+  }
   function currentRoomParticipants(){
     if(state.roomRole!=="host")return state.roomParticipants;
     const people=[{id:state.roomId,name:roomDisplayName(),role:"Host"}];
@@ -473,7 +485,7 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
     renderRoomParticipants();
     broadcastToGuests({type:"participants",participants:state.roomParticipants});
     const guests=state.roomConnections.size;
-    roomStatus(`Room “${$("roomName").value.trim()}” · ${guests} guest${guests===1?"":"s"} connected (including you, ${guests+1} total).`);
+    roomStatus(`Room “${roomNameValue()}” · ${guests} guest${guests===1?"":"s"} connected (${guests+1} total, including you).`);
   }
   function broadcastSolve(solve){
     if(!state.roomRole)return;
@@ -482,9 +494,8 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
     if(state.roomRole==="host")broadcastToGuests(entry);
     else sendToConnection(state.roomConn,entry);
   }
-  function roomPayload(){return {peerId:state.roomId,token:state.roomToken,name:$ ("roomName").value.trim()||"CubeTime Room"};}
   function setRoomConnected(role){
-    state.roomRole=role;$ ("leaveRoomBtn").disabled=false;$ ("createRoomBtn").disabled=true;$ ("joinRoomBtn").disabled=true;$ ("roomName").disabled=true;
+    state.roomRole=role;$("leaveRoomBtn").disabled=false;$("createRoomBtn").disabled=true;$("joinRoomBtn").disabled=true;$("roomName").disabled=true;
     $("joinWrap").style.display="none";
   }
   function resetRoom(message){
@@ -496,32 +507,25 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
       if(state.roomPeer)state.roomPeer.destroy();
     }catch(e){}
     state.roomPeer=null;state.roomConn=null;state.roomConnections=new Map();state.roomParticipants=[];state.roomSelfId=null;state.roomRole=null;state.roomToken=null;state.roomInvite="";state.roomId=null;state.roomResults=[];
-    $("inviteWrap").style.display="none";$ ("leaveRoomBtn").disabled=true;$ ("createRoomBtn").disabled=false;$ ("joinRoomBtn").disabled=false;$ ("roomName").disabled=false;$ ("joinWrap").style.display="block";
+    $("leaveRoomBtn").disabled=true;$("createRoomBtn").disabled=false;$("joinRoomBtn").disabled=false;$("roomName").disabled=false;$("joinWrap").style.display="block";
     roomStatus(message||"Not connected to a room.");renderRoomBoard();
   }
-  function randomToken(){const bytes=new Uint8Array(18);crypto.getRandomValues(bytes);return Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("");}
-  function makeInvite(payload){const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"");return `${location.origin}${location.pathname}?room=${encoded}`;}
-  function parseInvite(value){let raw=value.trim();if(!raw)return null;try{if(raw.includes("?room="))raw=new URL(raw,location.href).searchParams.get("room")||"";raw=raw.replace(/-/g,"+").replace(/_/g,"/");raw+="=".repeat((4-raw.length%4)%4);const data=JSON.parse(decodeURIComponent(escape(atob(raw))));if(data.peerId&&data.token)return data;}catch(e){}return null;}
-  $("createRoomBtn").addEventListener("click",()=>{
-    if(!window.Peer)return toast("Multiplayer library did not load. Check your connection and reload.");
-    const name=$("roomName").value.trim();if(!name)return toast("Enter a room name first.");
-    if(state.roomPeer)return toast("Leave the current room first.");
-    state.roomToken=randomToken();state.roomResults=[];state.roomConnections=new Map();state.roomRole="host";roomStatus("Creating private room…");
-    const peer=new Peer();state.roomPeer=peer;
+  function attachHost(peer,name,roomPeerId){
+    state.roomPeer=peer;
     peer.on("open",id=>{
-      state.roomId=id;state.roomSelfId=id;const invite=makeInvite(roomPayload());state.roomInvite=invite;$("inviteLink").value=invite;$("inviteWrap").style.display="block";setRoomConnected("host");
-      state.roomParticipants=[{id,name:roomDisplayName(),role:"Host"}];renderRoomBoard();roomStatus(`Room “${name}” is open. Copy the invite link to invite multiple people.`);
+      state.roomId=roomPeerId;state.roomSelfId=roomPeerId;setRoomConnected("host");
+      state.roomParticipants=[{id:roomPeerId,name:roomDisplayName(),role:"Host"}];renderRoomBoard();
+      roomStatus(`Room “${name}” is open. Share the room name with friends; capitalization matters.`);
     });
     peer.on("connection",conn=>{
       conn.on("data",data=>{
-        if(data?.type==="auth"){
-          if(data.token!==state.roomToken){sendToConnection(conn,{type:"reject",message:"This invite is invalid."});setTimeout(()=>conn.close(),400);return;}
+        if(data?.type==="join-room"){
+          if(data.roomName!==name){sendToConnection(conn,{type:"reject",message:"Room names must match exactly, including capitalization."});setTimeout(()=>conn.close(),300);return;}
           const id=conn.peer;
           if(state.roomConnections.has(id))return;
           const playerName=String(data.name||"Guest").trim().slice(0,20)||"Guest";
           state.roomConnections.set(id,{conn,name:playerName});
-          setRoomConnected("host");
-          sendToConnection(conn,{type:"welcome",roomName:$ ("roomName").value.trim(),hostName:roomDisplayName(),participants:currentRoomParticipants(),results:state.roomResults});
+          sendToConnection(conn,{type:"welcome",roomName:name,hostName:roomDisplayName(),participants:currentRoomParticipants(),results:state.roomResults});
           updateHostParticipants();
           return;
         }
@@ -529,41 +533,49 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
           const entry={...data,type:"solve",name:state.roomConnections.get(conn.peer).name};state.roomResults.push(entry);renderRoomBoard();broadcastToGuests(entry,conn.peer);
         }
       });
-      conn.on("close",()=>{
-        if(state.roomConnections.has(conn.peer)){state.roomConnections.delete(conn.peer);updateHostParticipants();}
-      });
+      conn.on("close",()=>{if(state.roomConnections.has(conn.peer)){state.roomConnections.delete(conn.peer);updateHostParticipants();}});
       conn.on("error",()=>{if(state.roomConnections.has(conn.peer)){state.roomConnections.delete(conn.peer);updateHostParticipants();}});
     });
-    peer.on("error",err=>{roomStatus(`Room error: ${err.type||"connection failed"}. Try again.`);});
+    peer.on("error",err=>{
+      if(err.type==="unavailable-id")resetRoom(`Room “${name}” already exists. Choose another room name, or join it instead.`);
+      else roomStatus(`Room error: ${err.type||"connection failed"}. Try again.`);
+    });
+  }
+  $("createRoomBtn").addEventListener("click",()=>{
+    if(!window.Peer)return toast("Multiplayer library did not load. Check your connection and reload.");
+    const name=roomNameValue();if(!name)return toast("Enter a room name first.");
+    if(state.roomPeer)return toast("Leave the current room first.");
+    const roomPeerId=roomPeerIdForName(name);
+    state.roomToken=null;state.roomResults=[];state.roomConnections=new Map();state.roomRole="host";roomStatus("Opening room on the public peer-to-peer signaling service…");
+    const peer=new Peer(roomPeerId);attachHost(peer,name,roomPeerId);
   });
   $("joinRoomBtn").addEventListener("click",()=>{
     if(!window.Peer)return toast("Multiplayer library did not load. Check your connection and reload.");
     if(state.roomPeer)return toast("Leave the current room first.");
-    const invite=parseInvite($("joinCode").value);if(!invite)return toast("Paste a valid private invite link.");
-    state.roomToken=invite.token;state.roomId=invite.peerId;roomStatus("Connecting to room…");
+    const name=roomNameValue();if(!name)return toast("Enter the exact room name first.");
+    const roomPeerId=roomPeerIdForName(name);state.roomToken=null;state.roomId=roomPeerId;state.roomResults=[];roomStatus(`Looking for room “${name}”…`);
     const peer=new Peer();state.roomPeer=peer;
+    let welcomed=false;
     peer.on("open",id=>{
-      state.roomSelfId=id;const conn=peer.connect(invite.peerId,{reliable:true});state.roomConn=conn;
-      conn.on("open",()=>sendToConnection(conn,{type:"auth",token:invite.token,name:roomDisplayName()}));
+      state.roomSelfId=id;const conn=peer.connect(roomPeerId,{reliable:true});state.roomConn=conn;
+      conn.on("open",()=>sendToConnection(conn,{type:"join-room",roomName:name,name:roomDisplayName()}));
       conn.on("data",data=>{
         if(data?.type==="reject"){resetRoom(data.message||"Could not join room.");return;}
         if(data?.type==="welcome"){
-          state.roomRole="guest";setRoomConnected("guest");$("roomName").value=data.roomName||invite.name||"CubeTime Room";$("roomName").disabled=true;
+          welcomed=true;state.roomRole="guest";setRoomConnected("guest");$("roomName").value=data.roomName||name;$("roomName").disabled=true;
           state.roomResults=Array.isArray(data.results)?data.results:[];state.roomParticipants=Array.isArray(data.participants)?data.participants:[];
-          renderRoomBoard();roomStatus(`Joined “${data.roomName}” · ${state.roomParticipants.length} people in room.`);$("inviteWrap").style.display="none";
+          renderRoomBoard();roomStatus(`Joined “${data.roomName||name}” · ${state.roomParticipants.length} people in room.`);
         } else if(data?.type==="participants"){
-          state.roomParticipants=Array.isArray(data.participants)?data.participants:[];renderRoomParticipants();roomStatus(`In “${$("roomName").value}” · ${state.roomParticipants.length} people in room.`);
+          state.roomParticipants=Array.isArray(data.participants)?data.participants:[];renderRoomParticipants();roomStatus(`In “${roomNameValue()}” · ${state.roomParticipants.length} people in room.`);
         } else if(data?.type==="solve"){state.roomResults.push(data);renderRoomBoard();}
         else if(data?.type==="room-closed"){resetRoom(data.message||"The room host left.");}
       });
-      conn.on("error",()=>roomStatus("Could not connect. Ask the host to check the room is still open."));
+      conn.on("error",err=>{if(!welcomed)resetRoom(err.type==="peer-unavailable"?`Room “${name}” was not found. Check the exact room name and try again.`:"Could not connect. Check the room name and try again.");});
       conn.on("close",()=>{if(state.roomRole)resetRoom("Host disconnected from the room.");});
     });
-    peer.on("error",err=>{roomStatus(`Connection error: ${err.type||"could not connect"}.`);});
+    peer.on("error",err=>{if(!welcomed)resetRoom(`Connection error: ${err.type||"could not connect"}. Check the room name and try again.`);});
   });
-  $("copyInviteBtn").addEventListener("click",async()=>{try{await navigator.clipboard.writeText($("inviteLink").value);toast("Invite link copied. Share it with everyone you want in the room.");}catch(e){$("inviteLink").select();toast("Select and copy the invite link.");}});
   $("leaveRoomBtn").addEventListener("click",()=>resetRoom("You left the room."));
-  const inviteFromUrl=new URLSearchParams(location.search).get("room");if(inviteFromUrl){$("joinCode").value=location.href;roomStatus("Private invite detected. Enter your display name, then tap Join room.");}
 
   $("settingsBtn").addEventListener("click", () => $("settingsDialog").showModal());
   $("closeSettings").addEventListener("click", () => $("settingsDialog").close());
