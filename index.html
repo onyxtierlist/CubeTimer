@@ -20,7 +20,7 @@ main{max-width:1200px;margin:0 auto;padding:22px;display:grid;grid-template-colu
 .sidebar{display:flex;flex-direction:column;gap:14px}.side-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.side-head h2,.section-title{font-size:16px;margin:0;font-weight:750}.big-stat{font-size:27px;font-weight:750;margin-top:12px;font-variant-numeric:tabular-nums}.substat{font-size:12px;color:var(--muted);margin-top:3px}
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}.stat-tile{padding:12px;background:var(--panel2);border-radius:10px}.stat-tile .value{font-weight:750;font-size:19px;margin-top:4px;font-variant-numeric:tabular-nums}
 .session-select{max-width:145px;padding:6px 8px;font-size:13px}.session-row{display:flex;gap:7px;margin-top:12px}.session-row input{min-width:0;flex:1;width:80px}
-.table-wrap{overflow:auto;margin-top:12px}table{width:100%;border-collapse:collapse;white-space:nowrap}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--border);font-size:13px}th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}td:first-child{color:var(--muted);width:42px}td.time-cell{font-weight:700;font-variant-numeric:tabular-nums}tr.selected{background:#252b36}tr{cursor:pointer}tr:hover{background:#242833}.row-actions{display:flex;gap:6px}.small{padding:5px 8px;font-size:12px}.delete-solve{color:var(--red);padding:4px 7px;font-size:12px}.room-code{width:100%;margin-top:8px}.room-board{display:flex;flex-direction:column;gap:7px;margin-top:10px}.room-entry{display:flex;justify-content:space-between;gap:8px;background:var(--panel2);border-radius:8px;padding:8px 10px;font-size:13px}.room-entry strong{font-variant-numeric:tabular-nums}
+.table-wrap{overflow:auto;margin-top:12px}table{width:100%;border-collapse:collapse;white-space:nowrap}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--border);font-size:13px}th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}td:first-child{color:var(--muted);width:42px}td.time-cell{font-weight:700;font-variant-numeric:tabular-nums}tr.selected{background:#252b36}tr{cursor:pointer}tr:hover{background:#242833}.row-actions{display:flex;gap:6px}.small{padding:5px 8px;font-size:12px}.delete-solve{color:var(--red);padding:4px 7px;font-size:12px}.room-code{width:100%;margin-top:8px}.room-board{display:flex;flex-direction:column;gap:7px;margin-top:10px}.room-entry{display:flex;justify-content:space-between;gap:8px;background:var(--panel2);border-radius:8px;padding:8px 10px;font-size:13px}.room-entry strong{font-variant-numeric:tabular-nums}.room-section-title{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:800;margin:13px 0 6px}.room-person{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--panel2);border-radius:8px;padding:9px 10px;font-size:13px}.room-person-name{display:flex;align-items:center;gap:8px;min-width:0}.room-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}.room-role{font-size:11px;color:var(--muted);white-space:nowrap}
 footer{max-width:1200px;margin:0 auto;padding:0 22px 24px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:14px;width:min(520px,calc(100% - 28px));padding:22px}dialog::backdrop{background:#0009}.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}.settings-grid label{display:flex;flex-direction:column;gap:7px;font-size:13px;color:var(--muted)}.settings-grid select,.settings-grid input{width:100%}.dialog-actions{display:flex;justify-content:flex-end;gap:8px}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#2c3340;padding:10px 15px;border:1px solid var(--border);border-radius:10px;display:none;z-index:5}
@@ -93,14 +93,14 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
     </section>
     <section class="card" id="multiplayerCard">
       <div class="side-head"><h2>Multiplayer room</h2><span class="substat">Invite-only link</span></div>
-      <p class="substat" style="margin-top:8px">Create a private room and share its invite link with one person. The first invited guest to connect can join.</p>
+      <p class="substat" style="margin-top:8px">Create a private room and share the same invite link with multiple friends. Everyone in the room appears in the participant list.</p>
       <input id="roomName" class="room-code" maxlength="32" placeholder="Room name (e.g. Cube Duel)" aria-label="Room name">
       <input id="playerName" class="room-code" maxlength="20" placeholder="Your display name" aria-label="Your display name">
       <div class="controls" style="justify-content:flex-start;margin-top:8px"><button class="primary" id="createRoomBtn">＋ Create room</button><button id="leaveRoomBtn" disabled>Leave room</button></div>
       <div class="substat" id="roomStatus" style="margin-top:10px" aria-live="polite">Not connected to a room.</div>
       <div id="inviteWrap" style="display:none;margin-top:8px"><label class="substat" for="inviteLink">Private invite link</label><input id="inviteLink" class="room-code" readonly><button id="copyInviteBtn" class="small" style="margin-top:7px">Copy invite link</button></div>
       <div id="joinWrap" style="margin-top:10px"><label class="substat" for="joinCode">Have an invite code?</label><input id="joinCode" class="room-code" placeholder="Paste invite link or code" aria-label="Invite link or code"><button id="joinRoomBtn" style="margin-top:7px">Join room</button></div>
-      <div id="roomBoard" class="room-board"><div class="substat">Room results will appear here.</div></div>
+      <div class="room-section-title">People in room <span id="roomParticipantCount">(0)</span></div><div id="roomParticipants" class="room-board"><div class="substat">Create or join a room to see participants.</div></div><div class="room-section-title">Shared solve results</div><div id="roomBoard" class="room-board"><div class="substat">Room results will appear here.</div></div>
     </section>
     <section class="card">
       <div class="side-head"><h2>Recent solves</h2><button class="small" id="export">Export CSV</button></div>
@@ -137,7 +137,7 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
     labels: [{id:1,name:"Legendary",mode:"below",min:0,max:5,points:10},{id:2,name:"Epic",mode:"between",min:5,max:10,points:5},{id:3,name:"Bad",mode:"above",min:10,max:0,points:0}], nextLabelId: 4,
     running: false, ready: false, holdTimer: null, startAt: 0, elapsed: 0,
     raf: null, precision: 2, holdDelay: 500, cube: "3", inspection: "off",
-    currentScramble: "", selected: null, lastStop: 0, pointer: null, inspectionEnd: 0, inspectionInterval: null, metronome: false, metronomeInterval: null, deletedSolve: null, roomPeer: null, roomConn: null, roomRole: null, roomToken: null, roomInvite: "", roomGuestAccepted: false, roomResults: [], roomId: null
+    currentScramble: "", selected: null, lastStop: 0, pointer: null, inspectionEnd: 0, inspectionInterval: null, metronome: false, metronomeInterval: null, deletedSolve: null, roomPeer: null, roomConn: null, roomConnections: new Map(), roomParticipants: [], roomSelfId: null, roomRole: null, roomToken: null, roomInvite: "", roomResults: [], roomId: null
   };
   const storeKey = "cubetime-state-v1";
   function load() {
@@ -441,22 +441,64 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
       state.metronomeInterval=setInterval(()=>{try{const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();osc.frequency.value=880;gain.gain.value=.035;osc.connect(gain);gain.connect(audioCtx.destination);osc.start();osc.stop(audioCtx.currentTime+.045);}catch(e){}},1000);toast("Metronome on · 60 BPM");
     }else toast("Metronome off.");
   });
-  // Peer-to-peer multiplayer: room host gives a private, token-protected invite link to one guest.
+  // Peer-to-peer multiplayer: one host accepts multiple invite-link holders.
   function roomStatus(message){ $("roomStatus").textContent=message; }
+  function roomDisplayName(){return ($("playerName").value.trim()|| (state.roomRole==="host"?"Host":"Guest")).slice(0,20);}
+  function currentRoomParticipants(){
+    if(state.roomRole!=="host")return state.roomParticipants;
+    const people=[{id:state.roomId,name:roomDisplayName(),role:"Host"}];
+    for(const [id,info] of state.roomConnections.entries())people.push({id,name:info.name||"Guest",role:"Guest"});
+    return people;
+  }
+  function renderRoomParticipants(){
+    const people=state.roomParticipants||[];
+    $("roomParticipantCount").textContent=`(${people.length})`;
+    $("roomParticipants").innerHTML=people.length?people.map(person=>{
+      const isMe=person.id===state.roomSelfId;
+      return `<div class="room-person"><span class="room-person-name"><span class="room-dot"></span><strong>${escapeHtml(person.name||"Player")}${isMe?" (you)":""}</strong></span><span class="room-role">${escapeHtml(person.role||"Guest")}</span></div>`;
+    }).join(""):'<div class="substat">Create or join a room to see participants.</div>';
+  }
   function renderRoomBoard(){
     const board=$("roomBoard");
-    board.innerHTML=state.roomResults.length?state.roomResults.slice(-30).reverse().map(r=>`<div class="room-entry"><span>${escapeHtml(r.name)} · ${escapeHtml(r.time)}</span><span class="substat">${escapeHtml(r.at||"")}</span></div>`).join(""):'<div class="substat">Room results will appear here.</div>';
+    board.innerHTML=state.roomResults.length?state.roomResults.slice(-30).reverse().map(r=>`<div class="room-entry"><span>${escapeHtml(r.name)} · ${escapeHtml(r.time)}</span><span class="substat">${escapeHtml(r.at||"")}</span></div>`).join(""):'<div class="substat">No shared solves yet. Times will appear here as people solve.</div>';
+    renderRoomParticipants();
   }
-  function sendRoom(message){try{if(state.roomConn&&state.roomConn.open)state.roomConn.send(message);}catch(e){}}
+  function sendToConnection(conn,message){try{if(conn&&conn.open)conn.send(message);}catch(e){}}
+  function sendRoom(message){if(state.roomRole==="host")broadcastToGuests(message);else sendToConnection(state.roomConn,message);}
+  function broadcastToGuests(message,excludeId=null){
+    for(const [id,info] of state.roomConnections.entries())if(id!==excludeId)sendToConnection(info.conn,message);
+  }
+  function updateHostParticipants(){
+    state.roomParticipants=currentRoomParticipants();
+    renderRoomParticipants();
+    broadcastToGuests({type:"participants",participants:state.roomParticipants});
+    const guests=state.roomConnections.size;
+    roomStatus(`Room “${$("roomName").value.trim()}” · ${guests} guest${guests===1?"":"s"} connected (including you, ${guests+1} total).`);
+  }
   function broadcastSolve(solve){
     if(!state.roomRole)return;
-    const entry={type:"solve",name:($("playerName").value.trim()||"Player"),time:format(solve.ms,solve.penalty),at:new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"}),ms:solve.ms,penalty:solve.penalty||""};
+    const entry={type:"solve",name:roomDisplayName(),time:format(solve.ms,solve.penalty),at:new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"}),ms:solve.ms,penalty:solve.penalty||""};
     state.roomResults.push(entry);renderRoomBoard();
-    if(state.roomRole==="host")sendRoom(entry);else sendRoom(entry);
+    if(state.roomRole==="host")broadcastToGuests(entry);
+    else sendToConnection(state.roomConn,entry);
   }
   function roomPayload(){return {peerId:state.roomId,token:state.roomToken,name:$ ("roomName").value.trim()||"CubeTime Room"};}
-  function setRoomConnected(role){state.roomRole=role;$("leaveRoomBtn").disabled=false;$("createRoomBtn").disabled=true;$("joinRoomBtn").disabled=true;$("roomName").disabled=true;$("joinWrap").style.display=role==="host"?"none":"block";}
-  function resetRoom(message){try{if(state.roomConn)state.roomConn.close();if(state.roomPeer)state.roomPeer.destroy();}catch(e){}state.roomPeer=null;state.roomConn=null;state.roomRole=null;state.roomToken=null;state.roomInvite="";state.roomGuestAccepted=false;state.roomId=null;state.roomResults=[];$("inviteWrap").style.display="none";$("leaveRoomBtn").disabled=true;$("createRoomBtn").disabled=false;$("joinRoomBtn").disabled=false;$("roomName").disabled=false;$("joinWrap").style.display="block";roomStatus(message||"Not connected to a room.");renderRoomBoard();}
+  function setRoomConnected(role){
+    state.roomRole=role;$ ("leaveRoomBtn").disabled=false;$ ("createRoomBtn").disabled=true;$ ("joinRoomBtn").disabled=true;$ ("roomName").disabled=true;
+    $("joinWrap").style.display="none";
+  }
+  function resetRoom(message){
+    const oldRole=state.roomRole;
+    try{
+      if(oldRole==="host")broadcastToGuests({type:"room-closed",message:"The room host left."});
+      if(state.roomConn)state.roomConn.close();
+      if(state.roomConnections)for(const info of state.roomConnections.values())try{info.conn.close();}catch(e){}
+      if(state.roomPeer)state.roomPeer.destroy();
+    }catch(e){}
+    state.roomPeer=null;state.roomConn=null;state.roomConnections=new Map();state.roomParticipants=[];state.roomSelfId=null;state.roomRole=null;state.roomToken=null;state.roomInvite="";state.roomId=null;state.roomResults=[];
+    $("inviteWrap").style.display="none";$ ("leaveRoomBtn").disabled=true;$ ("createRoomBtn").disabled=false;$ ("joinRoomBtn").disabled=false;$ ("roomName").disabled=false;$ ("joinWrap").style.display="block";
+    roomStatus(message||"Not connected to a room.");renderRoomBoard();
+  }
   function randomToken(){const bytes=new Uint8Array(18);crypto.getRandomValues(bytes);return Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("");}
   function makeInvite(payload){const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"");return `${location.origin}${location.pathname}?room=${encoded}`;}
   function parseInvite(value){let raw=value.trim();if(!raw)return null;try{if(raw.includes("?room="))raw=new URL(raw,location.href).searchParams.get("room")||"";raw=raw.replace(/-/g,"+").replace(/_/g,"/");raw+="=".repeat((4-raw.length%4)%4);const data=JSON.parse(decodeURIComponent(escape(atob(raw))));if(data.peerId&&data.token)return data;}catch(e){}return null;}
@@ -464,20 +506,33 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
     if(!window.Peer)return toast("Multiplayer library did not load. Check your connection and reload.");
     const name=$("roomName").value.trim();if(!name)return toast("Enter a room name first.");
     if(state.roomPeer)return toast("Leave the current room first.");
-    state.roomToken=randomToken();state.roomResults=[];state.roomRole="host";roomStatus("Creating private room…");
+    state.roomToken=randomToken();state.roomResults=[];state.roomConnections=new Map();state.roomRole="host";roomStatus("Creating private room…");
     const peer=new Peer();state.roomPeer=peer;
-    peer.on("open",id=>{state.roomId=id;const invite=makeInvite(roomPayload());state.roomInvite=invite;$("inviteLink").value=invite;$("inviteWrap").style.display="block";setRoomConnected("host");roomStatus(`Room “${name}” is open. Waiting for one invited guest.`);});
+    peer.on("open",id=>{
+      state.roomId=id;state.roomSelfId=id;const invite=makeInvite(roomPayload());state.roomInvite=invite;$("inviteLink").value=invite;$("inviteWrap").style.display="block";setRoomConnected("host");
+      state.roomParticipants=[{id,name:roomDisplayName(),role:"Host"}];renderRoomBoard();roomStatus(`Room “${name}” is open. Copy the invite link to invite multiple people.`);
+    });
     peer.on("connection",conn=>{
-      if(state.roomGuestAccepted){conn.on("open",()=>conn.send({type:"reject",message:"This room already has its one guest."}));setTimeout(()=>conn.close(),1200);return;}
-      state.roomConn=conn;
       conn.on("data",data=>{
         if(data?.type==="auth"){
-          if(data.token!==state.roomToken||state.roomGuestAccepted){conn.send({type:"reject",message:"Invite is invalid or this room is already full."});conn.close();return;}
-          state.roomGuestAccepted=true;setRoomConnected("host");conn.send({type:"welcome",roomName:$ ("roomName").value.trim(),hostName:$ ("playerName").value.trim()||"Host",results:state.roomResults});roomStatus(`Connected to “${$("roomName").value.trim()}” · 1 guest joined.`);return;
+          if(data.token!==state.roomToken){sendToConnection(conn,{type:"reject",message:"This invite is invalid."});setTimeout(()=>conn.close(),400);return;}
+          const id=conn.peer;
+          if(state.roomConnections.has(id))return;
+          const playerName=String(data.name||"Guest").trim().slice(0,20)||"Guest";
+          state.roomConnections.set(id,{conn,name:playerName});
+          setRoomConnected("host");
+          sendToConnection(conn,{type:"welcome",roomName:$ ("roomName").value.trim(),hostName:roomDisplayName(),participants:currentRoomParticipants(),results:state.roomResults});
+          updateHostParticipants();
+          return;
         }
-        if(data?.type==="solve"&&state.roomGuestAccepted){state.roomResults.push(data);renderRoomBoard();}
+        if(data?.type==="solve"&&state.roomConnections.has(conn.peer)){
+          const entry={...data,type:"solve",name:state.roomConnections.get(conn.peer).name};state.roomResults.push(entry);renderRoomBoard();broadcastToGuests(entry,conn.peer);
+        }
       });
-      conn.on("close",()=>{if(state.roomConn===conn){state.roomConn=null;state.roomGuestAccepted=false;roomStatus("Guest disconnected. Waiting for an invited guest.");}});
+      conn.on("close",()=>{
+        if(state.roomConnections.has(conn.peer)){state.roomConnections.delete(conn.peer);updateHostParticipants();}
+      });
+      conn.on("error",()=>{if(state.roomConnections.has(conn.peer)){state.roomConnections.delete(conn.peer);updateHostParticipants();}});
     });
     peer.on("error",err=>{roomStatus(`Room error: ${err.type||"connection failed"}. Try again.`);});
   });
@@ -487,21 +542,28 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
     const invite=parseInvite($("joinCode").value);if(!invite)return toast("Paste a valid private invite link.");
     state.roomToken=invite.token;state.roomId=invite.peerId;roomStatus("Connecting to room…");
     const peer=new Peer();state.roomPeer=peer;
-    peer.on("open",()=>{const conn=peer.connect(invite.peerId,{reliable:true});state.roomConn=conn;
-      conn.on("open",()=>conn.send({type:"auth",token:invite.token,name:$ ("playerName").value.trim()||"Guest"}));
+    peer.on("open",id=>{
+      state.roomSelfId=id;const conn=peer.connect(invite.peerId,{reliable:true});state.roomConn=conn;
+      conn.on("open",()=>sendToConnection(conn,{type:"auth",token:invite.token,name:roomDisplayName()}));
       conn.on("data",data=>{
-        if(data?.type==="reject"){roomStatus(data.message||"Could not join room.");resetRoom(data.message||"Could not join room.");return;}
-        if(data?.type==="welcome"){state.roomRole="guest";setRoomConnected("guest");$("roomName").value=data.roomName||"CubeTime Room";$("roomName").disabled=true;state.roomResults=Array.isArray(data.results)?data.results:[];renderRoomBoard();roomStatus(`Joined “${data.roomName}” with ${data.hostName}.`);$("inviteWrap").style.display="none";}
-        else if(data?.type==="solve"){state.roomResults.push(data);renderRoomBoard();}
+        if(data?.type==="reject"){resetRoom(data.message||"Could not join room.");return;}
+        if(data?.type==="welcome"){
+          state.roomRole="guest";setRoomConnected("guest");$("roomName").value=data.roomName||invite.name||"CubeTime Room";$("roomName").disabled=true;
+          state.roomResults=Array.isArray(data.results)?data.results:[];state.roomParticipants=Array.isArray(data.participants)?data.participants:[];
+          renderRoomBoard();roomStatus(`Joined “${data.roomName}” · ${state.roomParticipants.length} people in room.`);$("inviteWrap").style.display="none";
+        } else if(data?.type==="participants"){
+          state.roomParticipants=Array.isArray(data.participants)?data.participants:[];renderRoomParticipants();roomStatus(`In “${$("roomName").value}” · ${state.roomParticipants.length} people in room.`);
+        } else if(data?.type==="solve"){state.roomResults.push(data);renderRoomBoard();}
+        else if(data?.type==="room-closed"){resetRoom(data.message||"The room host left.");}
       });
-      conn.on("error",()=>roomStatus("Could not connect. Ask the host to create a fresh invite link."));
-      conn.on("close",()=>{if(state.roomRole){resetRoom("Host disconnected from the room.");}});
+      conn.on("error",()=>roomStatus("Could not connect. Ask the host to check the room is still open."));
+      conn.on("close",()=>{if(state.roomRole)resetRoom("Host disconnected from the room.");});
     });
     peer.on("error",err=>{roomStatus(`Connection error: ${err.type||"could not connect"}.`);});
   });
-  $("copyInviteBtn").addEventListener("click",async()=>{try{await navigator.clipboard.writeText($("inviteLink").value);toast("Invite link copied. Send it only to your invited person.");}catch(e){$("inviteLink").select();toast("Select and copy the invite link.");}});
+  $("copyInviteBtn").addEventListener("click",async()=>{try{await navigator.clipboard.writeText($("inviteLink").value);toast("Invite link copied. Share it with everyone you want in the room.");}catch(e){$("inviteLink").select();toast("Select and copy the invite link.");}});
   $("leaveRoomBtn").addEventListener("click",()=>resetRoom("You left the room."));
-  const inviteFromUrl=new URLSearchParams(location.search).get("room");if(inviteFromUrl){$("joinCode").value=location.href;roomStatus("Private invite detected. Tap Join room to connect.");}
+  const inviteFromUrl=new URLSearchParams(location.search).get("room");if(inviteFromUrl){$("joinCode").value=location.href;roomStatus("Private invite detected. Enter your display name, then tap Join room.");}
 
   $("settingsBtn").addEventListener("click", () => $("settingsDialog").showModal());
   $("closeSettings").addEventListener("click", () => $("settingsDialog").close());
