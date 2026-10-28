@@ -81,6 +81,7 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
       <div class="controls" style="justify-content:flex-start;margin-top:12px">
         <button id="inspectionBtn">▶ Inspection (15s)</button>
         <button id="manualEntryBtn">＋ Add time</button>
+        <button id="drawScrambleBtn">▧ Draw scramble</button>
         <button id="batchScrambleBtn">▤ Batch scrambles</button>
         <button id="statsToolBtn">▥ Trends</button>
         <button id="exportJsonBtn">Export JSON</button>
@@ -136,7 +137,7 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
     labels: [{id:1,name:"Legendary",mode:"below",min:0,max:5,points:10},{id:2,name:"Epic",mode:"between",min:5,max:10,points:5},{id:3,name:"Bad",mode:"above",min:10,max:0,points:0}], nextLabelId: 4,
     running: false, ready: false, holdTimer: null, startAt: 0, elapsed: 0,
     raf: null, precision: 2, holdDelay: 500, cube: "3", inspection: "off",
-    currentScramble: "", selected: null, lastStop: 0, pointer: null, inspectionEnd: 0, inspectionInterval: null, metronome: false, metronomeInterval: null, deletedSolve: null, roomPeer: null, roomConn: null, roomConnections: new Map(), roomParticipants: [], roomSelfId: null, roomRole: null, roomToken: null, roomInvite: "", roomResults: [], roomId: null
+    currentScramble: "", selected: null, lastStop: 0, pointer: null, inspectionEnd: 0, inspectionInterval: null, metronome: false, metronomeInterval: null, deletedSolve: null, roomPeer: null, roomConn: null, roomConnections: new Map(), roomParticipants: [], roomSelfId: null, roomRole: null, roomToken: null, roomInvite: "", roomResults: [], roomId: null, drawScrambleOpen: false
   };
   const storeKey = "cubetime-state-v1";
   function load() {
@@ -186,6 +187,7 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
     state.currentScramble = out.join(" ");
     $("scramble").textContent = state.currentScramble;
     $("scrambleLabel").textContent = `${state.cube}×${state.cube}×${state.cube} Scramble`;
+    if (state.drawScrambleOpen) renderDrawScramble();
   }
   function tick() {
     if (!state.running) return;
@@ -404,6 +406,76 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);
       if(left===0){clearInterval(state.inspectionInterval);state.inspectionInterval=null;box.textContent="Inspection ended — start your solve when ready.";box.style.color="var(--red)";}
       else if(left<=3)box.style.color="var(--red)";
     },150);
+  });
+  // Draw Scramble: a self-contained 2D sticker diagram for 2x2 and 3x3 cubes.
+  // The facelet model is local JavaScript; it adds no backend or external dependency.
+  const drawFaceInfo = {
+    U:{normal:[0,1,0],right:[1,0,0],up:[0,0,-1],net:[1,0],color:"#f7f7f7",name:"Up"},
+    L:{normal:[-1,0,0],right:[0,0,1],up:[0,1,0],net:[0,1],color:"#ff8c1a",name:"Left"},
+    F:{normal:[0,0,1],right:[1,0,0],up:[0,1,0],net:[1,1],color:"#20c75a",name:"Front"},
+    R:{normal:[1,0,0],right:[0,0,-1],up:[0,1,0],net:[2,1],color:"#e53935",name:"Right"},
+    B:{normal:[0,0,-1],right:[-1,0,0],up:[0,1,0],net:[3,1],color:"#2585ff",name:"Back"},
+    D:{normal:[0,-1,0],right:[1,0,0],up:[0,0,1],net:[1,2],color:"#ffd928",name:"Down"}
+  };
+  const drawCross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+  const drawDot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+  function drawRotate(v,axis,quarterTurns){
+    let out=v.slice();
+    for(let n=0;n<((quarterTurns%4)+4)%4;n++){
+      const c=drawCross(axis,out),d=drawDot(axis,out);
+      out=[axis[0]*d-c[0],axis[1]*d-c[1],axis[2]*d-c[2]];
+    }
+    return out;
+  }
+  function drawCubeStickers(size){
+    const coords=size===2?[-1,1]:[-1,0,1], stickers=[];
+    for(const [face,info] of Object.entries(drawFaceInfo)){
+      for(const a of coords) for(const b of coords){
+        let pos,normal=info.normal.slice();
+        if(face==="U"||face==="D")pos=[a,info.normal[1],b];
+        else if(face==="L"||face==="R")pos=[info.normal[0],b,a];
+        else pos=[a,b,info.normal[2]];
+        stickers.push({face,color:face,pos,normal});
+      }
+    }
+    for(const token of (state.currentScramble||"").split(/\s+/).filter(Boolean)){
+      const face=token[0],info=drawFaceInfo[face];if(!info)continue;
+      const suffix=token.slice(1),turns=suffix==="2"?2:suffix==="'"?-1:1,axis=info.normal;
+      for(const sticker of stickers){
+        if(drawDot(sticker.pos,axis)===1){sticker.pos=drawRotate(sticker.pos,axis,turns);sticker.normal=drawRotate(sticker.normal,axis,turns);}
+      }
+    }
+    return stickers;
+  }
+  function drawFaceForNormal(normal){
+    return Object.keys(drawFaceInfo).find(face=>drawFaceInfo[face].normal.every((v,i)=>v===normal[i]));
+  }
+  function renderDrawScramble(){
+    const out=$("toolOutput");out.style.display="block";
+    if(Number(state.cube)!==2&&Number(state.cube)!==3){
+      out.innerHTML='<div class="substat">Draw Scramble currently supports 2×2×2 and 3×3×3. Choose one in Settings to view the cube diagram.</div>';return;
+    }
+    const size=Number(state.cube),n=size===2?2:3,stickers=drawCubeStickers(size),tile=size===2?28:21,gap=8,pad=12,faceSpan=n*tile;
+    const width=pad*2+4*faceSpan+3*gap,height=pad*2+3*faceSpan+2*gap;
+    const svg=[];
+    svg.push(`<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Drawn cube state for scramble ${escapeHtml(state.currentScramble)}" style="display:block;width:min(100%,${width}px);height:auto;margin:10px auto;background:var(--panel2);border-radius:10px;padding:8px">`);
+    for(const [face,info] of Object.entries(drawFaceInfo)){
+      const [fx,fy]=info.net,x0=pad+fx*(faceSpan+gap),y0=pad+fy*(faceSpan+gap);
+      svg.push(`<text x="${x0+faceSpan/2}" y="${y0-3}" text-anchor="middle" font-size="9" fill="var(--muted)">${face}</text>`);
+      for(const sticker of stickers.filter(s=>drawFaceForNormal(s.normal)===face)){
+        const col=size===2?(drawDot(sticker.pos,info.right)+1)/2:drawDot(sticker.pos,info.right)+1;
+        const row=size===2?(1-drawDot(sticker.pos,info.up))/2:1-drawDot(sticker.pos,info.up);
+        const color=drawFaceInfo[sticker.color].color;
+        svg.push(`<rect x="${x0+col*tile+1}" y="${y0+row*tile+1}" width="${tile-2}" height="${tile-2}" rx="3" fill="${color}" stroke="#101318" stroke-width="1.5"/>`);
+      }
+    }
+    svg.push('</svg>');
+    out.innerHTML=`<div class="substat">Draw Scramble · ${size}×${size}×${size} · compare this diagram with your physical cube.</div>${svg.join("")}<div style="font-size:12px;color:var(--muted);text-align:center">The diagram updates with each new scramble.</div>`;
+  }
+  $("drawScrambleBtn").addEventListener("click",()=>{
+    state.drawScrambleOpen=!state.drawScrambleOpen;
+    $("drawScrambleBtn").textContent=state.drawScrambleOpen?"▧ Hide scramble drawing":"▧ Draw scramble";
+    if(state.drawScrambleOpen)renderDrawScramble();else $("toolOutput").style.display="none";
   });
   $("batchScrambleBtn").addEventListener("click",()=>{
     const count=Number(prompt("How many scrambles? (1–100)","25"));if(!Number.isInteger(count)||count<1||count>100)return toast("Choose between 1 and 100.");
